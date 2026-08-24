@@ -1,0 +1,39 @@
+{
+  "name": "ai-room",
+  "version": "0.1.0",
+  "description": "One terminal chat room for every AI CLI on your machine — Claude, Codex, Gemini/Antigravity, Ollama, and anything else you wire in. Zero dependencies.",
+  "type": "module",
+  "bin": {
+    "ai-room": "bin/ai-room.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "chat",
+    "agents",
+    "claude",
+    "codex",
+    "gemini",
+    "ollama",
+    "multi-agent",
+    "terminal"
+  ],
+  "author": "Kirpajeet Singh Gill (https://github.com/kirpajeet12)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kirpajeet12/ai-room.git"
+  },
+  "scripts": {
+    "start": "node bin/ai-room.js"
+  }
+}
