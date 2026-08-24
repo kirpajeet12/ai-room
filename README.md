@@ -15,15 +15,29 @@ Codex: Postgres. SQLite if you're truly single-server and want zero ops...
 Gemini: Postgres is the safe default; consider SQLite + Litestream if...
 ```
 
-## Run it
+## Install & run
+
+No install needed — run it straight from npm:
 
 ```bash
 npx ai-room
 ```
 
-(or from GitHub before the npm release: `npx github:kirpajeet12/ai-room`)
+Or install it as a permanent command:
+
+```bash
+npm install -g ai-room
+ai-room
+```
 
 No setup. It detects which AI CLIs you already have installed and logged in — anything missing is simply not in the room.
+
+## Update
+
+```bash
+npx ai-room@latest        # if you use npx
+npm update -g ai-room     # if you installed globally
+```
 
 Supported out of the box:
 
