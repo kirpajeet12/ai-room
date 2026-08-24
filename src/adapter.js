@@ -54,6 +54,8 @@ export function askAgent(agent, prompt, pathEnv) {
       },
     );
 
+    // Some CLIs (codex) block waiting on stdin if the pipe is left open.
+    child.stdin?.end();
     child.on("error", (err) => reject(err));
   });
 }
