@@ -1,0 +1,39 @@
+name: Add an AI CLI to the room
+description: Request (or volunteer) support for an agent that isn't in ai-room yet
+title: "Add agent: "
+labels: ["adapter", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Adding an agent is about eight lines in `src/config.js` — see
+        [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md). PRs very welcome.
+  - type: input
+    id: cli
+    attributes:
+      label: Which CLI?
+      placeholder: e.g. aider, cursor-agent, opencode
+    validations:
+      required: true
+  - type: input
+    id: install
+    attributes:
+      label: How is it installed?
+      placeholder: e.g. npm i -g aider, brew install aider
+    validations:
+      required: true
+  - type: input
+    id: oneshot
+    attributes:
+      label: What's the one-shot command?
+      description: The invocation that takes a prompt and prints one answer, then exits.
+      placeholder: e.g. aider --message "your prompt here"
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Is stdout clean?
+      description: >
+        Paste what it prints for a trivial prompt. If it's noisy, does the CLI have a
+        flag to write just the final message to a file?
