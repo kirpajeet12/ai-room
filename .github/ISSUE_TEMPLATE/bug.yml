@@ -1,0 +1,27 @@
+name: Bug report
+description: Something in the room isn't behaving
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Which agent(s)?
+      placeholder: e.g. codex, or "all of them"
+  - type: input
+    id: versions
+    attributes:
+      label: ai-room and Node version
+      placeholder: "ai-room 0.1.1, node 20.11.0"
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What did it print?
+      render: shell
