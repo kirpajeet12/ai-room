@@ -13,7 +13,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "keywords": [
     "ai",
@@ -34,6 +34,7 @@
     "url": "git+https://github.com/kirpajeet12/ai-room.git"
   },
   "scripts": {
-    "start": "node bin/ai-room.js"
+    "start": "node bin/ai-room.js",
+    "test": "node --test"
   }
 }

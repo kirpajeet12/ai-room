@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { askAgent } from "./adapter.js";
+import { stripControl } from "./sanitize.js";
 
 const MAX_CONTEXT_MESSAGES = 30;
 
@@ -50,11 +51,11 @@ export class Room {
     this.pending += 1;
     this.ui.thinking(agent);
     try {
-      const reply = await askAgent(agent, this.buildPrompt(agent), this.pathEnv);
+      const reply = stripControl(await askAgent(agent, this.buildPrompt(agent), this.pathEnv));
       this.transcript.push({ who: agent.label, text: reply });
       this.ui.agentMessage(agent, reply);
     } catch (err) {
-      this.ui.error(`${agent.label} ${err.message}`);
+      this.ui.error(`${agent.label} ${stripControl(err.message)}`);
     } finally {
       this.pending -= 1;
       if (this.pending === 0) this.ui.idle();
@@ -101,6 +102,6 @@ export class Room {
   export(path) {
     const lines = ["# ai-room transcript", ""];
     for (const m of this.transcript) lines.push(`**${m.who}:** ${m.text}`, "");
-    writeFileSync(path, lines.join("\n"));
+    writeFileSync(path, lines.join("\n"), { flag: "wx" });
   }
 }

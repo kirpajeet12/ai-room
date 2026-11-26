@@ -93,8 +93,12 @@ async function handle(line) {
       }
       case "/export": {
         const path = rest[0] || `ai-room-${new Date().toISOString().slice(0, 10)}.md`;
-        room.export(path);
-        ui.info(`transcript saved to ${path}`);
+        try {
+          room.export(path);
+          ui.info(`transcript saved to ${path}`);
+        } catch (err) {
+          ui.error(err.code === "EEXIST" ? `${path} already exists — pick another name: /export other.md` : err.message);
+        }
         break;
       }
       case "/quit":
