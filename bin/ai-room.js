@@ -46,13 +46,15 @@ const room = new Room(
 console.log(`${BOLD}ai-room${RESET} — one terminal, every AI on your machine\n`);
 console.log(`In the room: ${room.agents.map((a) => color(a.color, a.label)).join(", ")}`);
 if (missing.length) console.log(`${DIM}Not installed: ${missing.map((a) => a.label).join(", ")}${RESET}`);
-console.log(`${DIM}Talk to everyone, or @name one agent. /help for commands.${RESET}\n`);
+console.log(`${DIM}Built-in agents run chat-only (no tools). Everything you type goes to every agent's provider — don't paste secrets.${RESET}`);
+console.log(`${DIM}Talk to everyone, or @name one agent. /help for commands, /doctor to check sign-ins.${RESET}\n`);
 
 const HELP = `
   <message>            everyone in the room replies
   @name <message>      only that agent replies (e.g. @codex, @gemini)
   /agents              who is in the room
   /mute name, /unmute name
+  /doctor              check every agent answers (installed, signed in, reachable)
   /debate <topic> [rounds]   agents debate, then give a verdict (default 2 rounds)
   /export [file.md]    save the transcript
   /quit                leave
@@ -79,10 +81,14 @@ async function handle(line) {
         if (!agent) ui.error(`no agent called "${rest[0] || ""}"`);
         else {
           agent.muted = cmd === "/mute";
+          if (!agent.muted) agent.failures = 0;
           ui.info(`${agent.label} ${agent.muted ? "muted" : "unmuted"}`);
         }
         break;
       }
+      case "/doctor":
+        await room.doctor(missing);
+        break;
       case "/debate": {
         const roundsMatch = rest.at(-1)?.match(/^\d+$/);
         const rounds = roundsMatch ? Math.min(parseInt(roundsMatch[0], 10), 5) : 2;

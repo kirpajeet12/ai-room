@@ -3,17 +3,30 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// Built-in adapters. `cmd` is an argv array (never a shell string, so prompts
-// can't be injected into a shell). Tokens: {prompt} is replaced with the
-// outgoing prompt, {outfile} with a temp file the CLI should write its final
-// message to (for CLIs whose stdout is noisy).
+// Built-in adapters, chat-only by default: no tools, no MCP servers, sandboxed,
+// and no session files left behind in each CLI's history. `cmd` is an argv
+// array (never a shell string, so prompts can't be injected into a shell).
+// Tokens: {prompt} is replaced with the outgoing prompt, {outfile} with a temp
+// file the CLI should write its final message to (for CLIs whose stdout is
+// noisy).
+const AGY_DENY_ALL = JSON.stringify({
+  trustedWorkspaces: [],
+  permissions: { deny: ["command(*)", "mcp(*)", "browser(*)"] },
+});
+
 export const DEFAULT_AGENTS = [
   {
     name: "claude",
     label: "Claude",
     color: "35", // magenta
     bin: "claude",
-    cmd: ["claude", "-p", "{prompt}"],
+    cmd: [
+      "claude", "-p", "{prompt}",
+      "--tools", "",
+      "--strict-mcp-config",
+      "--disable-slash-commands",
+      "--no-session-persistence",
+    ],
     out: "stdout",
   },
   {
@@ -21,7 +34,21 @@ export const DEFAULT_AGENTS = [
     label: "Codex",
     color: "36", // cyan
     bin: "codex",
-    cmd: ["codex", "exec", "--skip-git-repo-check", "--output-last-message", "{outfile}", "{prompt}"],
+    cmd: [
+      "codex", "exec",
+      "--ignore-user-config",
+      "--ignore-rules",
+      "--sandbox", "read-only",
+      "--disable", "shell_tool",
+      "--disable", "unified_exec",
+      "--disable", "browser_use",
+      "--disable", "in_app_browser",
+      "--disable", "apps",
+      "--ephemeral",
+      "--skip-git-repo-check",
+      "--output-last-message", "{outfile}",
+      "{prompt}",
+    ],
     out: "file",
   },
   {
@@ -29,7 +56,13 @@ export const DEFAULT_AGENTS = [
     label: "Gemini",
     color: "33", // yellow
     bin: "agy",
-    cmd: ["agy", "-p", "{prompt}"],
+    cmd: [
+      "agy",
+      "--sandbox",
+      "--disable-slash-commands",
+      "--settings", AGY_DENY_ALL,
+      "-p", "{prompt}",
+    ],
     out: "stdout",
   },
   {

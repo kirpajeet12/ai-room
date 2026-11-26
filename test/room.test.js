@@ -51,3 +51,25 @@ test("export refuses to overwrite an existing file", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("an agent that keeps failing is muted after 3 failures in a row", async () => {
+  const ui = fakeUi();
+  const flaky = { name: "flaky", label: "Flaky", out: "stdout", muted: false, cmd: [process.execPath, "-e", "console.error('Error: Not logged in'); process.exit(1)", "{prompt}"] };
+  const room = new Room([flaky], process.env.PATH, ui);
+  for (let i = 0; i < 3; i++) await room.dispatch(flaky);
+  assert.equal(flaky.muted, true);
+  assert.ok(ui.out.some(([kind, text]) => kind === "info" && /muted after 3 failures/.test(text)));
+  assert.ok(ui.out.every(([kind, text]) => kind !== "error" || !/You are Flaky/.test(text)));
+});
+
+test("doctor reports who answers and why others fail, without touching the chat", async () => {
+  const ui = fakeUi();
+  const ok = { name: "ok", label: "Good", out: "stdout", muted: false, cmd: [process.execPath, "-e", "process.stdout.write('OK')", "{prompt}"] };
+  const bad = { name: "bad", label: "Bad", out: "stdout", muted: false, cmd: [process.execPath, "-e", "console.error('Error: Not logged in'); process.exit(1)", "{prompt}"] };
+  const room = new Room([ok, bad], process.env.PATH, ui);
+  await room.doctor([{ label: "Missing", bin: "missing-bin" }]);
+  assert.ok(ui.out.some(([kind, text]) => kind === "info" && /✓ Good — answered/.test(text)));
+  assert.ok(ui.out.some(([kind, text]) => kind === "error" && /Bad: Error: Not logged in/.test(text)));
+  assert.ok(ui.out.some(([kind, text]) => kind === "info" && /Missing — not installed/.test(text)));
+  assert.equal(room.transcript.length, 0);
+});
