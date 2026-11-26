@@ -1,6 +1,6 @@
 {
   "name": "ai-room",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "One terminal chat room for every AI CLI on your machine — Claude, Codex, Gemini/Antigravity, Ollama, and anything else you wire in. Zero dependencies.",
   "type": "module",
   "bin": {
