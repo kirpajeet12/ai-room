@@ -1,7 +1,10 @@
 import { writeFileSync } from "node:fs";
 import { askAgent } from "./adapter.js";
+import { stripControl } from "./sanitize.js";
 
 const MAX_CONTEXT_MESSAGES = 30;
+export const MAX_FAILURES_BEFORE_MUTE = 3;
+const DOCTOR_PROMPT = "Health check from ai-room. Reply with exactly: OK";
 
 export class Room {
   constructor(agents, pathEnv, ui) {
@@ -50,11 +53,17 @@ export class Room {
     this.pending += 1;
     this.ui.thinking(agent);
     try {
-      const reply = await askAgent(agent, this.buildPrompt(agent), this.pathEnv);
+      const reply = stripControl(await askAgent(agent, this.buildPrompt(agent), this.pathEnv));
+      agent.failures = 0;
       this.transcript.push({ who: agent.label, text: reply });
       this.ui.agentMessage(agent, reply);
     } catch (err) {
-      this.ui.error(`${agent.label} ${err.message}`);
+      agent.failures = (agent.failures ?? 0) + 1;
+      this.ui.error(`${agent.label}: ${stripControl(err.message)}`);
+      if (agent.failures >= MAX_FAILURES_BEFORE_MUTE && !agent.muted) {
+        agent.muted = true;
+        this.ui.info(`${agent.label} muted after ${agent.failures} failures in a row — /unmute ${agent.name} to retry`);
+      }
     } finally {
       this.pending -= 1;
       if (this.pending === 0) this.ui.idle();
@@ -98,9 +107,32 @@ export class Room {
     await this.dispatch(panel[0]);
   }
 
+  // Ask every agent (muted ones too) a tiny question in parallel and report
+  // who answers, how fast, and why the others failed. Not added to the chat.
+  async doctor(missing = []) {
+    this.ui.info(`checking ${this.agents.length} agent(s)…`);
+    const results = await Promise.all(
+      this.agents.map(async (agent) => {
+        const started = Date.now();
+        try {
+          await askAgent(agent, DOCTOR_PROMPT, this.pathEnv);
+          return { agent, ok: true, seconds: (Date.now() - started) / 1000 };
+        } catch (err) {
+          return { agent, ok: false, reason: stripControl(err.message) };
+        }
+      }),
+    );
+    for (const r of results) {
+      if (r.ok) this.ui.info(`✓ ${r.agent.label} — answered in ${r.seconds.toFixed(1)}s${r.agent.muted ? " (muted)" : ""}`);
+      else this.ui.error(`${r.agent.label}: ${r.reason}`);
+    }
+    for (const m of missing) this.ui.info(`· ${m.label} — not installed (${m.bin})`);
+    return results;
+  }
+
   export(path) {
     const lines = ["# ai-room transcript", ""];
     for (const m of this.transcript) lines.push(`**${m.who}:** ${m.text}`, "");
-    writeFileSync(path, lines.join("\n"));
+    writeFileSync(path, lines.join("\n"), { flag: "wx" });
   }
 }
